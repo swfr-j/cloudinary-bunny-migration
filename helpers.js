@@ -21,12 +21,18 @@ export const getBatch = async (DB_BATCH_SIZE, count) => {
     return data;
 };
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const writeLogToFile = (data) => {
+
+}
 
 const processItem = async (item) => {
-    console.log(item);
-    console.log("Downloading file");
-    await sleep(1000);
+    const { cloudinaryId, url } = item;
+    console.log(`Downloading file ${url}`);
+    let bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
+    // divide bunnyPath into path and fileName
+    const path = bunnyPath.split('/').slice(0, -1).join('/');
+    const fileName = bunnyPath.split('/').pop();
+    console.log(`Uploading file to BunnyNet ${bunnyPath} ${path} ${fileName}`);
 }
 
 export const processBatch = async (batch) => {

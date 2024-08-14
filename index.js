@@ -13,7 +13,7 @@
 // DB with the new URL
 import { getBatch, processBatch } from './helpers';
 
-const DB_BATCH_SIZE=1000; // limit
+const DB_BATCH_SIZE=10; // limit
 let count = 0; // offset
 
 // fetch the initial batch
@@ -26,7 +26,7 @@ do {
     // refetch data if the batch size is less than the limit
     count += DB_BATCH_SIZE;
     console.log(`Fetching batch with offset ${count}`);
-    data = await getBatch(DB_BATCH_SIZE, count);    
     break;
+    data = await getBatch(DB_BATCH_SIZE, count);    
 } while (data.length > 0);
 
