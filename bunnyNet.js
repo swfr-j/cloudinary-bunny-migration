@@ -15,14 +15,14 @@ class BCDN {
     storageZone,
     publicDomain,
   ) {
-    this.headers = {
+    this.headers = { 
       AccessKey: apiKey,
       "Content-Type": "application/json",
       Accept: "application/json",
     };
 
     this.publicDomain = publicDomain;
-    this.baseUrl = `${httpMode}://${storageZoneRegion}.${baseURLDomain}/${storageZone}`;
+    this.baseUrl = `${httpMode}://${baseURLDomain}/${storageZone}`;
 
     this.axios = axios.create({
       baseURL: this.baseUrl,
@@ -76,10 +76,10 @@ class BCDN {
 }
 
 const bcdn = new BCDN(
-  process.env.BUNNYCDN_API_KEY,
-  process.env.BUNNYCDN_API_DOMAIN,
-  process.env.BUNNYCDN_STORAGE_ZONE,
-  process.env.BUNNYCDN_PUBLIC_DOMAIN
+  Bun.env.BUNNYCDN_API_KEY,
+  Bun.env.BUNNYCDN_API_DOMAIN,
+  Bun.env.BUNNYCDN_STORAGE_ZONE,
+  Bun.env.BUNNYCDN_PUBLIC_DOMAIN
 );
 
 export default bcdn;
