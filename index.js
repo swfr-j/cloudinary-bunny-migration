@@ -11,35 +11,22 @@
 // DB Update will be done from a separate script after all the files are uploaded
 // and it should first check if the file is uploaded to bunnyNet and then update the
 // DB with the new URL
+import { getBatch, processBatch } from './helpers';
 
-import PQueue from 'p-queue';
-import db from './db';
-import bcdn from './bunnyNet';
-import cloudinary from './cloudinary';
+const DB_BATCH_SIZE=1000; // limit
+let count = 0; // offset
 
-const queue = new PQueue({ concurrency: 10 });
+// fetch the initial batch
+let data = await getBatch(DB_BATCH_SIZE, count);
 
-const DB_BATCH_SIZE=10; // limit
-const count = 0; // offset
+do {
+    // use pqueue to iterate over the batch and download and upload the files
+    await processBatch(data);
 
-const getBatch = async () => {
-    const query = `
-    SELECT "cloudinaryId", url 
-    FROM files
-    WHERE url LIKE 'https://res.cloudinary.com/nolt%'
-    LIMIT ${DB_BATCH_SIZE}
-    OFFSET ${count};
-    `;
+    // refetch data if the batch size is less than the limit
+    count += DB_BATCH_SIZE;
+    console.log(`Fetching batch with offset ${count}`);
+    data = await getBatch(DB_BATCH_SIZE, count);    
+    break;
+} while (data.length > 0);
 
-    const data = await db.query(query, {
-        type: db.QueryTypes.SELECT,
-    });
-
-    return data;
-};
-
-let data = await getBatch();
-console.log(data);
-// do {
-
-// } while (data.length > 0);
