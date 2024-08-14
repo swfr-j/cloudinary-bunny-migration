@@ -2,6 +2,7 @@ import PQueue from 'p-queue';
 import bcdn from './bunnyNet';
 import cloudinary from './cloudinary';
 import db from './db';
+import axios from 'axios';
 
 const queue = new PQueue({ concurrency: 10 });
 
@@ -9,7 +10,7 @@ export const getBatch = async (DB_BATCH_SIZE, count) => {
     const query = `
     SELECT "cloudinaryId", url 
     FROM files
-    WHERE url LIKE 'https://res.cloudinary.com/nolt%'
+    WHERE url LIKE 'https://res.cloudinary.com/nolt%' AND "dateDeleted" IS NULL
     LIMIT ${DB_BATCH_SIZE}
     OFFSET ${count};
     `;
@@ -22,17 +23,27 @@ export const getBatch = async (DB_BATCH_SIZE, count) => {
 };
 
 const writeLogToFile = (data) => {
-
+    
 }
 
 const processItem = async (item) => {
     const { cloudinaryId, url } = item;
-    console.log(`Downloading file ${url}`);
-    let bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
+    const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
     // divide bunnyPath into path and fileName
-    const path = bunnyPath.split('/').slice(0, -1).join('/');
     const fileName = bunnyPath.split('/').pop();
-    console.log(`Uploading file to BunnyNet ${bunnyPath} ${path} ${fileName}`);
+    
+    let data;
+    try {
+        const file = await axios.get(url, {
+            responseType: 'arraybuffer',
+        });
+
+        data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
+    } catch (error) {
+        console.error("Error: ", error.status, error.message); 
+    }
+
+    console.log("Uploaded: ", url, data);
 }
 
 export const processBatch = async (batch) => {
