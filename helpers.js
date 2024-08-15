@@ -3,7 +3,7 @@ import bcdn from './bunnyNet';
 import cloudinary from './cloudinary';
 import db from './db';
 import axios from 'axios';
-import csvWriter from './csvWriter';
+import { csvWriter } from './csvHelpers';
 import logger from './logger';
 
 const queue = new PQueue({ concurrency: 10 });
@@ -86,5 +86,5 @@ export const processBatch = async (batch) => {
     }
 
     await queue.onIdle();
-    await sleep(1000);
+    await sleep(100);
 };

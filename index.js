@@ -31,8 +31,11 @@ do {
     // refetch data if the batch size is less than the limit
     count += DB_BATCH_SIZE;
     totalCount++;
-    if (totalCount > 3) { break; } // for testing
-    
+    if (totalCount > 3) { 
+        logger.warn("Breaking the loop for testing");
+        break; 
+    } // for testing
+
     logger.info(`Fetching batch with offset ${count}`);
     [nextCursor, data] = await getBatch(nextCursor, DB_BATCH_SIZE, count);    
 } while (data.length > 0);
