@@ -1,4 +1,3 @@
-import path from 'path';
 import { EOL } from 'os';
 import { existsSync, createReadStream } from 'fs';
 import { createObjectCsvWriter } from 'csv-writer';
@@ -6,28 +5,23 @@ import PQueue from "p-queue";
 
 const queue = new PQueue({ concurrency: 10 });
 
-const csvFilePath = path.resolve(__dirname, 'data.csv');
-
-export const csvWriter = createObjectCsvWriter({
-    path: csvFilePath,
-    header: [
+export const csvWriter = (csvPath) => {
+    const headers = [
         { id: 'public_id', title: 'public_id' },
         { id: 'cloudinary_url', title: 'cloudinary_url' },
         { id: 'bunny_url', title: 'bunny_url' }
-    ],
-    append: existsSync(csvFilePath), // Append if the file already exists
-});
+    ];
 
-export const csvErrorWriter = createObjectCsvWriter({
-    path: path.resolve(__dirname, 'errors.csv'),
-    header: [
-        { id: 'public_id', title: 'public_id' },
-        { id: 'cloudinary_url', title: 'cloudinary_url' },
-        { id: 'bunny_url', title: 'bunny_url' },
-        { id: 'error', title: 'error' }
-    ],
-    append: existsSync(path.resolve(__dirname, 'errors.csv')), // Append if the file already exists
-});
+    if (csvPath.endsWith('errors.csv')) {
+        headers.push({ id: 'error', title: 'error' });
+    }
+
+    return createObjectCsvWriter({
+        path: csvPath,
+        header: headers,
+        append: existsSync(csvPath),
+    });
+}
 
 const parseChunk = async (text, index, processDataCallback) => {
     if (index === 0) {
@@ -47,7 +41,7 @@ const parseChunk = async (text, index, processDataCallback) => {
     await queue.onIdle();
 }
 
-export const csvReader = async (processDataCallback) => {
+export const csvReader = async (csvFilePath, processDataCallback) => {
     return new Promise((resolve, reject) => {
         let chunkCount = 0;
         const readStream = createReadStream(csvFilePath);

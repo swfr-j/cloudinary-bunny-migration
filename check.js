@@ -1,6 +1,10 @@
+import path from 'path';    
 import axios from "axios";
-import { csvReader, csvErrorWriter } from "./csvHelpers";
+import { csvReader, csvWriter } from "./csvHelpers";
 import logger from "./logger";
+
+const csvErrorFilePath = path.resolve(__dirname, 'errors.csv');
+const csvFilePath = path.resolve(__dirname, 'data.csv');
 
 const processBatch = async (public_id, cloudinary_url, bunny_url) => {
     if (!bunny_url) { return; }
@@ -14,13 +18,13 @@ const processBatch = async (public_id, cloudinary_url, bunny_url) => {
         }
     } catch (error) {
         logger.error(`Error checking URL: ${bunny_url}`, error);
-        await csvErrorWriter.writeRecords([{ public_id, cloudinary_url, bunny_url, error: error.message }]);
+        await csvWriter(csvErrorFilePath).writeRecords([{ public_id, cloudinary_url, bunny_url, error: error.message }]);
     }
 }
 
 const readCsvInBatches = async () => {
     try {
-        await csvReader(processBatch);
+        await csvReader(csvFilePath, processBatch);
         logger.info('CSV processing completed.');
     } catch (error) {
         logger.error('Error processing CSV:', error);

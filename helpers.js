@@ -1,7 +1,7 @@
 import PQueue from 'p-queue';
 import bcdn from './bunnyNet';
 import cloudinary from './cloudinary';
-import db from './db';
+import path from 'path';    
 import axios from 'axios';
 import { csvWriter } from './csvHelpers';
 import logger from './logger';
@@ -65,8 +65,9 @@ const processItem = async (item) => {
     logger.info("Uploaded: ", url, data);
     const bunnyUrl = data.url;
 
+    const csvFilePath = path.resolve(__dirname, 'data.csv');
     try {
-        await csvWriter.writeRecords([
+        await csvWriter(csvFilePath).writeRecords([
             { public_id, cloudinary_url: url, bunny_url: bunnyUrl }
         ]);
         logger.info(`Record written to CSV for ${public_id}`);
