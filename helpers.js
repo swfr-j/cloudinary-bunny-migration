@@ -8,22 +8,6 @@ import logger from './logger';
 
 const queue = new PQueue({ concurrency: 10 });
 
-// export const getBatch = async (DB_BATCH_SIZE, count) => {
-//     const query = `
-//     SELECT "cloudinaryId", url 
-//     FROM files
-//     WHERE url LIKE 'https://res.cloudinary.com/nolt%' AND "dateDeleted" IS NULL
-//     LIMIT ${DB_BATCH_SIZE}
-//     OFFSET ${count};
-//     `;
-
-//     const data = await db.query(query, {
-//         type: db.QueryTypes.SELECT,
-//     });
-
-//     return data;
-// };
-
 export const getBatch = async (cursor, DB_BATCH_SIZE, count) => {
     try {
         const resources = await cloudinary.api.resources({
