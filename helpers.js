@@ -3,30 +3,47 @@ import bcdn from './bunnyNet';
 import cloudinary from './cloudinary';
 import db from './db';
 import axios from 'axios';
+import csvWriter from './csvWriter';
+import logger from './logger';
 
 const queue = new PQueue({ concurrency: 10 });
 
-export const getBatch = async (DB_BATCH_SIZE, count) => {
-    const query = `
-    SELECT "cloudinaryId", url 
-    FROM files
-    WHERE url LIKE 'https://res.cloudinary.com/nolt%' AND "dateDeleted" IS NULL
-    LIMIT ${DB_BATCH_SIZE}
-    OFFSET ${count};
-    `;
+// export const getBatch = async (DB_BATCH_SIZE, count) => {
+//     const query = `
+//     SELECT "cloudinaryId", url 
+//     FROM files
+//     WHERE url LIKE 'https://res.cloudinary.com/nolt%' AND "dateDeleted" IS NULL
+//     LIMIT ${DB_BATCH_SIZE}
+//     OFFSET ${count};
+//     `;
 
-    const data = await db.query(query, {
-        type: db.QueryTypes.SELECT,
-    });
+//     const data = await db.query(query, {
+//         type: db.QueryTypes.SELECT,
+//     });
 
-    return data;
-};
+//     return data;
+// };
+
+export const getBatch = async (cursor, DB_BATCH_SIZE, count) => {
+    try {
+        const resources = await cloudinary.api.resources({
+            max_results: DB_BATCH_SIZE,
+            next_cursor: cursor
+        });
+        let nextCursor = resources.next_cursor;
+
+        return [nextCursor, resources.resources];
+    } catch (error) {
+        logger.error("Failed to fetch resources", error.status, error.message);
+    }
+}
+
 
 const processItem = async (item) => {
-    const { cloudinaryId, url } = item;
+    const { public_id, format, secure_url: url } = item;
     const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
     // divide bunnyPath into path and fileName
-    const fileName = bunnyPath.split('/').pop();
+    const fileName = `${public_id}.${format}`;
     
     let data;
     let file;
@@ -46,6 +63,21 @@ const processItem = async (item) => {
     }
 
     logger.info("Uploaded: ", url, data);
+    const bunnyUrl = data.url;
+
+    try {
+        await csvWriter.writeRecords([
+            { public_id, cloudinary_url: url, bunny_url: bunnyUrl }
+        ]);
+        logger.info(`Record written to CSV for ${public_id}`);
+    } catch(error) {
+        logger.error("Failed to write to CSV", error.status, error.message);
+    }
+}
+
+// to avoid rate limiting
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export const processBatch = async (batch) => {
@@ -54,4 +86,5 @@ export const processBatch = async (batch) => {
     }
 
     await queue.onIdle();
+    await sleep(1000);
 };

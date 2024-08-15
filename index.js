@@ -18,11 +18,11 @@ logger.info("Starting the process");
 const DB_BATCH_SIZE=10; // limit
 let count = 0; // offset
 
-
 // fetch the initial batch
 logger.info(`Fetching batch with offset ${count}`);
-let data = await getBatch(DB_BATCH_SIZE, count);
+let [nextCursor, data] = await getBatch(null, DB_BATCH_SIZE, count);
 
+let totalCount = 0;
 do {
     // use pqueue to iterate over the batch and download and upload the files
     logger.info(`Processing batch with size ${data.length}`);
@@ -30,9 +30,11 @@ do {
 
     // refetch data if the batch size is less than the limit
     count += DB_BATCH_SIZE;
+    totalCount++;
+    if (totalCount > 3) { break; } // for testing
+    
     logger.info(`Fetching batch with offset ${count}`);
-    break;
-    data = await getBatch(DB_BATCH_SIZE, count);    
+    [nextCursor, data] = await getBatch(nextCursor, DB_BATCH_SIZE, count);    
 } while (data.length > 0);
 
 logger.info("Process completed");
