@@ -22,10 +22,6 @@ export const getBatch = async (DB_BATCH_SIZE, count) => {
     return data;
 };
 
-const writeLogToFile = (data) => {
-    
-}
-
 const processItem = async (item) => {
     const { cloudinaryId, url } = item;
     const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
@@ -33,17 +29,23 @@ const processItem = async (item) => {
     const fileName = bunnyPath.split('/').pop();
     
     let data;
+    let file;
+
     try {
-        const file = await axios.get(url, {
+        file = await axios.get(url, {
             responseType: 'arraybuffer',
         });
-
+    } catch (error) {
+        logger.error("Download Failed", error.status, error.message); 
+    }
+    
+    try {
         data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
     } catch (error) {
-        console.error("Error: ", error.status, error.message); 
+        logger.error("Upload failed", error.status, error.message);
     }
 
-    console.log("Uploaded: ", url, data);
+    logger.info("Uploaded: ", url, data);
 }
 
 export const processBatch = async (batch) => {

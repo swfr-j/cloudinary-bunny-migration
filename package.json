@@ -13,6 +13,7 @@
     "cloudinary": "^2.4.0",
     "p-queue": "^8.0.1",
     "pg": "^8.12.0",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.3",
+    "winston": "^3.14.2"
   }
 }
