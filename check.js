@@ -4,6 +4,7 @@ import { csvReader, csvWriter } from "./csvHelpers";
 import logger from "./logger";
 
 const csvErrorFilePath = path.resolve(__dirname, 'errors.csv');
+const csvCheckedFilePath = path.resolve(__dirname, 'check.csv');
 const csvFilePath = path.resolve(__dirname, 'data.csv');
 
 const processBatch = async (public_id, cloudinary_url, bunny_url) => {
@@ -13,9 +14,9 @@ const processBatch = async (public_id, cloudinary_url, bunny_url) => {
 
         if (res.status !== 200) {
             throw new Error(`Url not working: ${bunny_url}`);
-        } else {
-            logger.info(`Url working: ${bunny_url}`);
-        }
+        } 
+        logger.info(`Url working: ${bunny_url}`);
+        await csvWriter(csvCheckedFilePath).writeRecords([{ public_id, cloudinary_url, bunny_url }]);
     } catch (error) {
         logger.error(`Error checking URL: ${bunny_url}`, error);
         await csvWriter(csvErrorFilePath).writeRecords([{ public_id, cloudinary_url, bunny_url, error: error.message }]);
