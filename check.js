@@ -3,8 +3,8 @@ import axios from "axios";
 import { csvReader, csvWriter } from "./csvHelpers";
 import logger from "./logger";
 
-const csvErrorFilePath = path.resolve(__dirname, 'errors.csv');
-const csvCheckedFilePath = path.resolve(__dirname, 'check.csv');
+const csvErrorFilePath = path.resolve(__dirname, 'check_errors.csv');
+const csvCheckedFilePath = path.resolve(__dirname, 'check_success.csv');
 const csvFilePath = path.resolve(__dirname, 'data.csv');
 
 const processBatch = async (public_id, cloudinary_url, bunny_url) => {

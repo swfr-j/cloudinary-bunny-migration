@@ -4,7 +4,7 @@ import { EOL } from 'os';
 import logger from './logger';
 import db from './db';
 
-const csvCheckedFilePath = path.resolve(__dirname, 'check.csv');
+const csvCheckedFilePath = path.resolve(__dirname, 'check_success.csv');
 
 const migrateDB = async (data, transaction) => {
     // using literal, write a query to update all the data in one go using case statement
@@ -17,10 +17,11 @@ const migrateDB = async (data, transaction) => {
     WHERE "cloudinaryId" IN (${data.map(([public_id, cloudinary_url, bunny_url]) => `'${public_id}'`)});
     `;
 
-    await db.query(query, {
-        type: db.QueryTypes.UPDATE,
-        transaction,
-    });
+    console.log(query);
+    // await db.query(query, {
+    //     type: db.QueryTypes.UPDATE,
+    //     transaction,
+    // });
 }
 
 const parseChunk = async (text, index, transaction) => {
