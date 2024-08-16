@@ -5,7 +5,8 @@
   "scripts": {
     "migrate": "bun index.js",
     "check": "bun check.js",
-    "update:db": "bun update_db.js"
+    "update:db": "bun update_db.js",
+    "cleanup": "bun cleanup.js"
   },
   "devDependencies": {
     "@types/bun": "latest"
