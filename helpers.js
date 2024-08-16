@@ -8,15 +8,15 @@ import logger from './logger';
 
 const queue = new PQueue({ concurrency: 10 });
 
-export const getBatch = async (cursor, DB_BATCH_SIZE, count) => {
+export const getBatch = async (cursor, DB_BATCH_SIZE) => {
     try {
-        const resources = await cloudinary.api.resources({
+        const resources = await cloudinary.v2.api.resources({
             max_results: DB_BATCH_SIZE,
             next_cursor: cursor
         });
         let nextCursor = resources.next_cursor;
 
-        return [nextCursor, resources.resources];
+        return { nextCursor, resources: resources.resources };
     } catch (error) {
         logger.error("Failed to fetch resources", error.status, error.message);
     }

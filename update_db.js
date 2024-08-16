@@ -78,7 +78,6 @@ const readCsvInBatches = async () => {
         await transaction.commit();
     } catch (error) {
         logger.error('Error processing CSV:', error);
-        await transaction.rollback();
     }
 }
 
