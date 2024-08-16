@@ -38,6 +38,7 @@ const processItem = async (item) => {
         });
     } catch (error) {
         logger.error("Download Failed", error.status, error.message); 
+        return;
     }
     
     try {
@@ -46,7 +47,7 @@ const processItem = async (item) => {
         logger.error("Upload failed", error.status, error.message);
     }
 
-    logger.info("Uploaded: ", url, data);
+    logger.info(`Uploaded: ${url}`);
     const bunnyUrl = data.url;
 
     const csvFilePath = path.resolve(__dirname, 'data.csv');
@@ -61,7 +62,7 @@ const processItem = async (item) => {
 }
 
 // to avoid rate limiting
-const sleep = (ms) => {
+export const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
