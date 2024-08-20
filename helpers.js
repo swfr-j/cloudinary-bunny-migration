@@ -8,6 +8,7 @@ import logger from './logger';
 import db from './db';
 
 const queue = new PQueue({ concurrency: 10 });
+const pgQueue = new PQueue({ concurrency: 5 });
 
 export const getBatch = async (cursor, DB_BATCH_SIZE) => {
     try {
@@ -38,14 +39,14 @@ const processItem = async (item) => {
             responseType: 'arraybuffer',
         });
     } catch (error) {
-        logger.error("Download Failed", error.status, error.message); 
+        logger.error(`Download Failed ${public_id}, ${error.status}, ${error.message}`);
         return;
     }
     
     try {
         data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
     } catch (error) {
-        logger.error("Upload failed", error.status, error.message);
+        logger.error(`Upload failed ${public_id}, ${error.status}, ${error.message}`);   
     }
 
     logger.info(`Uploaded: ${url}`);
@@ -58,7 +59,7 @@ const processItem = async (item) => {
         ]);
         logger.info(`Record written to CSV for ${public_id}`);
     } catch(error) {
-        logger.error("Failed to write to CSV", error.status, error.message);
+        logger.error(`Failed to write to CSV ${public_id}, ${error.status}, ${error.message}`);
     }
 }
 
@@ -76,10 +77,53 @@ export const processBatch = async (batch) => {
     await sleep(100);
 };
 
+export const processPgItem = async (item) => {
+    const { cloudinaryId, url } = item;
+    const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
+    const fileName = `${cloudinaryId}.${item.extension}`;
+
+    let data;
+    let file;
+
+    try {
+        file = await axios.get(url, {
+            responseType: 'arraybuffer',
+        });
+    } catch (error) {
+        logger.error(`Download Failed ${cloudinaryId}, ${error.status}, ${error.message}`);
+        return;
+    }
+
+    try {
+        data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
+    } catch (error) {
+        logger.error(`Upload failed ${cloudinaryId}, ${error.status}, ${error.message}`);
+    }
+
+    const csvFilePath = path.resolve(__dirname, 'data_pg.csv');
+    try {
+        await csvWriter(csvFilePath).writeRecords([
+            { public_id: cloudinaryId, cloudinary_url: url, bunny_url: data.url }
+        ]);
+        logger.info(`Record written to CSV for ${cloudinaryId}`);
+    } catch(error) {
+        logger.error(`Failed to write to CSV ${cloudinaryId}, ${error.status}, ${error.message}`);
+    }
+};
+
+export const processPgBatch = async (batch) => {
+    for(const item of batch) {
+        pgQueue.add(() => processPgItem(item));
+    }
+
+    await pgQueue.onIdle();
+    await sleep(5000);
+}
+
 export const getPgBatch = async (offset, DB_BATCH_SIZE) => {
     try {
         const res = await db.query(`
-            SELECT "cloudinaryId", url FROM files
+            SELECT "cloudinaryId", url, extension FROM files
             WHERE url LIKE 'https://res.cloudinary.com/%'
                 AND "dateDeleted" IS NULL
             LIMIT ${DB_BATCH_SIZE}
