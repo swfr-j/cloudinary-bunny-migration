@@ -5,7 +5,7 @@
   "scripts": {
     "migrate": "bun index.js",
     "check": "bun check.js",
-    "update:db": "bun update_db.js",
+    "update:db": "python update_db.py",
     "cleanup": "bun cleanup.js"
   },
   "devDependencies": {
@@ -17,6 +17,7 @@
   "dependencies": {
     "axios": "^1.7.4",
     "cloudinary": "^2.4.0",
+    "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "p-queue": "^8.0.1",
     "parse-csv-stream": "^2.0.2",
