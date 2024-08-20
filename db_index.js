@@ -6,7 +6,9 @@ const DB_BATCH_SIZE=500; // limit
 let count = 0; // offset
 
 
-const total = await getTotalPgRecords();
+let total = await getTotalPgRecords();
+
+total = total[0].count;
 
 console.log(total);
 
