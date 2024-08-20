@@ -12,6 +12,8 @@ lerna-debug.log*
 
 # CSV
 data.csv
+# python env
+env/
 
 *.csv
 
