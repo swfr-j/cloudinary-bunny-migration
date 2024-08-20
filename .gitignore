@@ -14,6 +14,8 @@ lerna-debug.log*
 data.csv
 # python env
 env/
+# old migration scripts
+"Migration Scripts"/
 
 *.csv
 
