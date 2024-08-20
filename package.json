@@ -3,7 +3,8 @@
   "module": "index.js",
   "type": "module",
   "scripts": {
-    "migrate": "bun index.js",
+    "migrate:cld:cursor": "bun index.js",
+    "migrate:pg:records": "bun db_index.js",
     "check": "bun check.js",
     "update:db": "python update_db.py",
     "cleanup": "bun cleanup.js"

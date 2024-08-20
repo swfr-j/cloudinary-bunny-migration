@@ -5,6 +5,7 @@ import path from 'path';
 import axios from 'axios';
 import { csvWriter } from './csvHelpers';
 import logger from './logger';
+import db from './db';
 
 const queue = new PQueue({ concurrency: 10 });
 
@@ -74,3 +75,31 @@ export const processBatch = async (batch) => {
     await queue.onIdle();
     await sleep(100);
 };
+
+export const getPgBatch = async (offset, DB_BATCH_SIZE) => {
+    try {
+        const res = await db.query(`
+            SELECT "cloudinaryId", url FROM files
+            WHERE url LIKE 'https://res.cloudinary.com/%'
+                AND "dateDeleted" IS NULL
+            LIMIT ${DB_BATCH_SIZE}
+            OFFSET ${offset};
+        `, { type: db.QueryTypes.SELECT });
+        return res;
+    } catch (error) {
+        logger.error("Failed to fetch resources", error.status, error.message);
+    }
+}
+
+export const getTotalPgRecords = async () => {
+    try {
+        const res = await db.query(`
+            SELECT COUNT(*) FROM files
+            WHERE url LIKE 'https://res.cloudinary.com/%'
+                AND "dateDeleted" IS NULL;
+        `, { type: db.QueryTypes.SELECT });
+        return res;
+    } catch (error) {
+        logger.error("Failed to fetch resources", error.status, error.message);
+    }
+}
