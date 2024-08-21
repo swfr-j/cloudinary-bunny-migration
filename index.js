@@ -24,12 +24,12 @@ let breakNextLoop = false; //
 let nextCursor;
 if (process.argv.length > 2) {
     nextCursor = process.argv[2];
-    count = process.argv[3] || 0;
+    count = parseInt(process.argv[3]) || 0;
 }
 
 // let totalCount = 0;
 do {
-    logger.info(`Fetching batch with offset ${count}`);
+    logger.warn(`Fetching batch with offset ${count}`);
     let batch;
     batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
     
@@ -55,7 +55,7 @@ do {
     logger.info("Sleeping for 30 seconds");
     await sleep(30 * 1000); // 30 seconds
 
-    logger.info(`New cursor: ${batch.nextCursor}, Batch size: ${batch.resources.length}`);
+    logger.warn(`New cursor: ${batch.nextCursor}, Batch size: ${batch.resources.length}`);
 } while (!breakNextLoop);
 
 logger.info("Process completed");
