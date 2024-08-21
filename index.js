@@ -27,6 +27,14 @@ if (process.argv.length > 2) {
     count = parseInt(process.argv[3]) || 0;
 }
 
+const writeToFile = (fileName, data) => {
+    fs.writeFile(fileName, data, (err) => {
+        if (err) {
+            logger.error("Failed to write to file", err);
+        }
+    });
+};
+
 // let totalCount = 0;
 do {
     logger.warn(`Fetching batch with offset ${count}`);
@@ -36,6 +44,11 @@ do {
     const data = batch.resources;
     nextCursor = batch.nextCursor;
     count += data.length;
+
+    // write nextCursor and count to a file
+    writeToFile("cursor.txt", nextCursor);
+    writeToFile("count.txt", count);
+
 
     // use pqueue to iterate over the batch and download and upload the files
     logger.info(`Processing batch with size ${data.length}`);
