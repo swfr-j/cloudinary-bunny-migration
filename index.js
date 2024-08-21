@@ -22,9 +22,9 @@ let breakNextLoop = false; //
 // read cursor from command line
 // bun index.js cursor
 let nextCursor;
-
 if (process.argv.length > 2) {
     nextCursor = process.argv[2];
+    count = process.argv[3] || 0;
 }
 
 // let totalCount = 0;
