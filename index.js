@@ -13,6 +13,7 @@
 // DB with the new URL
 import { getBatch, processBatch, sleep } from './helpers';
 import logger from './logger';
+import fs from 'fs';
 
 logger.info("Starting the process");
 const DB_BATCH_SIZE=500; // limit
