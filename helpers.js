@@ -7,8 +7,9 @@ import { csvWriter } from './csvHelpers';
 import logger from './logger';
 import db from './db';
 
-const queue = new PQueue({ concurrency: 5 });
-const pgQueue = new PQueue({ concurrency: 5 });
+// 5 concurrent uploads, 5 minute timeout
+const queue = new PQueue({ concurrency: 5, timeout: 1000 * 60 * 5, throwOnTimeout: true }); 
+const pgQueue = new PQueue({ concurrency: 5, timeout: 1000 * 60 * 5, throwOnTimeout: true });
 
 export const getBatch = async (cursor, DB_BATCH_SIZE) => {
     try {
