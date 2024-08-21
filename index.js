@@ -19,7 +19,14 @@ const DB_BATCH_SIZE=500; // limit
 let count = 0; // offset
 let breakNextLoop = false; // 
 
+// read cursor from command line
+// bun index.js cursor
 let nextCursor;
+
+if (process.argv.length > 2) {
+    nextCursor = process.argv[2];
+}
+
 // let totalCount = 0;
 do {
     logger.info(`Fetching batch with offset ${count}`);
