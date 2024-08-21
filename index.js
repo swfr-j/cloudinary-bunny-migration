@@ -33,7 +33,7 @@ do {
     // use pqueue to iterate over the batch and download and upload the files
     logger.info(`Processing batch with size ${data.length}`);
     await processBatch(data);
-
+    
     // totalCount++;
     // if (totalCount > 6) { 
     //     logger.warn("Breaking the loop for testing");

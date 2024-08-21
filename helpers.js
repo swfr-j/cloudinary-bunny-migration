@@ -31,9 +31,21 @@ const processItem = async (item) => {
     // divide bunnyPath into path and fileName
     const fileName = `${public_id}.${format}`;
     
+    // check if the file is already uploaded
+    const checkUrl = `${process.env.BUNNYCDN_PUBLIC_DOMAIN}${bunnyPath}`;
+    
+    try {
+        const res = await axios.head(checkUrl);
+        if (res.status === 200) {
+            logger.info(`File already uploaded with public id ${public_id}`);
+            return;
+        }
+    } catch (error) {
+        logger.error(`File not found ${public_id}`);
+    }
+
     let data;
     let file;
-
     try {
         file = await axios.get(url, {
             responseType: 'arraybuffer',
