@@ -8,8 +8,8 @@ import logger from './logger';
 import db from './db';
 
 // 5 concurrent uploads, 5 minute timeout
-const queue = new PQueue({ concurrency: 5, timeout: 1000 * 60 * 5, throwOnTimeout: true }); 
-const pgQueue = new PQueue({ concurrency: 5, timeout: 1000 * 60 * 5, throwOnTimeout: true });
+const queue = new PQueue({ concurrency: 10, timeout: 1000 * 60 * 5, throwOnTimeout: true }); 
+const pgQueue = new PQueue({ concurrency: 10, timeout: 1000 * 60 * 5, throwOnTimeout: true });
 
 export const getBatch = async (cursor, DB_BATCH_SIZE) => {
     try {
@@ -74,6 +74,64 @@ const processItem = async (item) => {
     } catch(error) {
         logger.error(`Failed to write to CSV ${public_id}, ${error.status}, ${error.message}`);
     }
+}
+
+export const processReuploadItem = async (batch) => {
+    const { public_id, format, secure_url: url } = item;
+    const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
+    // divide bunnyPath into path and fileName
+    const fileName = `${public_id}.${format}`;
+    
+    // check if the file is already uploaded
+    const checkUrl = `${process.env.BUNNYCDN_PUBLIC_DOMAIN}${bunnyPath}`;
+    let data;
+    let file;
+        
+    try {
+        const res = await axios.head(checkUrl);
+        if (res.status !== 200) {
+            throw new Error("File not found");
+        }
+
+        data = { url: checkUrl };
+    } catch (error) {
+        try {
+            file = await axios.get(url, {
+                responseType: 'arraybuffer',
+            });
+        } catch (error) {
+            logger.error(`Download Failed ${public_id}, ${error.status}, ${error.message}`);
+            return;
+        }
+        
+        try {
+            data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
+        } catch (error) {
+            logger.error(`Upload failed ${public_id}, ${error.status}, ${error.message}`);   
+        }
+    }
+
+    logger.info(`Uploaded: ${url}`);
+    const bunnyUrl = data.url;
+
+    const csvFilePath = path.resolve(__dirname, 'data_reuploaded.csv');
+    try {
+        await csvWriter(csvFilePath).writeRecords([
+            { public_id, cloudinary_url: url, bunny_url: bunnyUrl }
+        ]);
+        logger.info(`Record written to CSV for ${public_id}`);
+    } catch(error) {
+        logger.error(`Failed to write to CSV ${public_id}, ${error.status}, ${error.message}`);
+    }
+}
+
+export const processReuploadBatch = async (batch) => {
+    for(const item of batch) {
+        queue.add(() => processReuploadItem(item));
+    }
+
+    await queue.onIdle();
+    await sleep(100);
 }
 
 // to avoid rate limiting
