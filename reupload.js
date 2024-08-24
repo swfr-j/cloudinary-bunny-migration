@@ -10,11 +10,11 @@ let breakNextLoop = false; //
 
 // read cursor from command line
 // bun index.js cursor
-let nextCursor;
-if (process.argv.length > 2) {
-    nextCursor = process.argv[2];
-    count = parseInt(process.argv[3]) || 0;
-}
+// let nextCursor;
+// if (process.argv.length > 2) {
+//     nextCursor = process.argv[2];
+//     count = parseInt(process.argv[3]) || 0;
+// }
 
 const writeToFile = (fileName, data) => {
     fs.writeFile(fileName, data, (err) => {
@@ -29,17 +29,18 @@ do {
     logger.warn(`Fetching batch with offset ${count}`);
     let batch, batch2, batch3;
     
-    logger.warn(`Batch1 Cursor: ${batch.nextCursor}, Batch size: ${batch.resources.length}`);
-    batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
+    // batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
+    batch = await getBatch(batch3?.nextCursor, DB_BATCH_SIZE);    
+    logger.warn(`Batch1 Cursor: ${batch?.nextCursor}, Batch size: ${batch?.resources.length}`);
     
     if (batch.nextCursor !== undefined) {
-        logger.warn(`Batch2 Cursor: ${batch2.nextCursor}, Batch size: ${batch.resources.length}`);
         batch2 = await getBatch(batch.nextCursor, DB_BATCH_SIZE);
+        logger.warn(`Batch2 Cursor: ${batch2?.nextCursor}, Batch size: ${batch2?.resources.length}`);
     }
     
     if (batch2.nextCursor !== undefined) {
-        logger.warn(`Batch3 Cursor: ${batch3.nextCursor}, Batch size: ${batch.resources.length}`);
         batch3 = await getBatch(batch2.nextCursor, DB_BATCH_SIZE);
+        logger.warn(`Batch3 Cursor: ${batch3.nextCursor}, Batch size: ${batch3.resources.length}`);
     }
     
     if (batch.nextCursor === undefined || batch2.nextCursor === undefined || batch3.nextCursor === undefined) {
