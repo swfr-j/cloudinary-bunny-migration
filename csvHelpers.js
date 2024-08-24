@@ -3,7 +3,7 @@ import { existsSync, createReadStream } from 'fs';
 import { createObjectCsvWriter } from 'csv-writer';
 import PQueue from "p-queue";
 
-const queue = new PQueue({ concurrency: 10 });
+const queue = new PQueue({ concurrency: 30 });
 
 export const csvWriter = (csvPath) => {
     const headers = [
