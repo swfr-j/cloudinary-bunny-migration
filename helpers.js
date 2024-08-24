@@ -9,13 +9,15 @@ import db from './db';
 
 // 5 concurrent uploads, 5 minute timeout
 const queue = new PQueue({ concurrency: 10, timeout: 1000 * 60 * 5, throwOnTimeout: true }); 
+const reUploadQueue = new PQueue({ concurrency: 25, timeout: 1000 * 60, throwOnTimeout: true, retries: 3 });
 const pgQueue = new PQueue({ concurrency: 10, timeout: 1000 * 60 * 5, throwOnTimeout: true });
 
-export const getBatch = async (cursor, DB_BATCH_SIZE) => {
+export const getBatch = async (cursor, DB_BATCH_SIZE, resourceType = 'image') => {
     try {
         const resources = await cloudinary.v2.api.resources({
             max_results: DB_BATCH_SIZE,
-            next_cursor: cursor
+            next_cursor: cursor,
+            resource_type: resourceType,
         });
         let nextCursor = resources.next_cursor;
 
@@ -76,7 +78,7 @@ const processItem = async (item) => {
     }
 }
 
-export const processReuploadItem = async (batch) => {
+export const processReuploadItem = async (item) => {
     const { public_id, format, secure_url: url } = item;
     const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
     // divide bunnyPath into path and fileName
@@ -95,6 +97,7 @@ export const processReuploadItem = async (batch) => {
 
         data = { url: checkUrl };
     } catch (error) {
+        logger.error(`File not found ${public_id}. Uploading again`);
         try {
             file = await axios.get(url, {
                 responseType: 'arraybuffer',
@@ -127,11 +130,10 @@ export const processReuploadItem = async (batch) => {
 
 export const processReuploadBatch = async (batch) => {
     for(const item of batch) {
-        queue.add(() => processReuploadItem(item));
+        reUploadQueue.add(() => processReuploadItem(item));
     }
 
-    await queue.onIdle();
-    await sleep(100);
+    await reUploadQueue.onIdle();
 }
 
 // to avoid rate limiting

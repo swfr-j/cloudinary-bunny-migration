@@ -27,38 +27,45 @@ const writeToFile = (fileName, data) => {
 // let totalCount = 0;
 do {
     logger.warn(`Fetching batch with offset ${count}`);
-    let batch;
-    batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
-    console.log(batch.resources.length);
-
-    const data = batch.resources;
-    nextCursor = batch.nextCursor;
-    count += data.length;
-
-    // write nextCursor and count to a file
-    writeToFile("cursor.txt", nextCursor);
-    writeToFile("count.txt", count);
-
-
-    // use pqueue to iterate over the batch and download and upload the files
-    logger.info(`Processing batch with size ${data.length}`);
-    await processReuploadBatch(data);
+    let batch, batch2, batch3;
     
-    // totalCount++;
-    // if (totalCount > 6) { 
-    //     logger.warn("Breaking the loop for testing");
-    //     break; 
-    // } // for testing
-    // avoid rate limiting
-
-    if (batch.nextCursor === undefined) {
+    logger.warn(`Batch1 Cursor: ${batch.nextCursor}, Batch size: ${batch.resources.length}`);
+    batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
+    
+    if (batch.nextCursor !== undefined) {
+        logger.warn(`Batch2 Cursor: ${batch2.nextCursor}, Batch size: ${batch.resources.length}`);
+        batch2 = await getBatch(batch.nextCursor, DB_BATCH_SIZE);
+    }
+    
+    if (batch2.nextCursor !== undefined) {
+        logger.warn(`Batch3 Cursor: ${batch3.nextCursor}, Batch size: ${batch.resources.length}`);
+        batch3 = await getBatch(batch2.nextCursor, DB_BATCH_SIZE);
+    }
+    
+    if (batch.nextCursor === undefined || batch2.nextCursor === undefined || batch3.nextCursor === undefined) {
         breakNextLoop = true;
     }
 
+    // write nextCursor and count to a file
+    writeToFile("cursor.txt", `${batch.nextCursor}\n${batch2.nextCursor}\n${batch3.nextCursor}`);
+    writeToFile("count.txt", `${count}`);
+
+
+    // use pqueue to iterate over the batch and download and upload the files
+    logger.info(`Processing batch with size ${batch.resources.length} and ${batch2.resources.length} and ${batch3.resources.length}`);
+    const processes = [];
+    processes.push(processReuploadBatch(batch.resources));
+    if (batch2.resources.length > 0) {
+        processes.push(processReuploadBatch(batch2.resources));
+    } 
+    if (batch3.resources.length > 0) {
+        processes.push(processReuploadBatch(batch3.resources));
+    }
+    await Promise.all(processes);
+
+    count += batch.resources.length + batch2.resources.length + batch3.resources.length;
     logger.info("Sleeping for 15 seconds");
     await sleep(15 * 1000); // 15 seconds
-
-    logger.warn(`New cursor: ${batch.nextCursor}, Batch size: ${batch.resources.length}`);
 } while (!breakNextLoop);
 
 logger.info("Process completed");
