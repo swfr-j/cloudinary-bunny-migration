@@ -24,10 +24,10 @@ const writeToFile = (fileName, data) => {
     });
 };
 
+let batch, batch2, batch3;
 // let totalCount = 0;
 do {
     logger.warn(`Fetching batch with offset ${count}`);
-    let batch, batch2, batch3;
     
     logger.info(`Old batch cursor: ${batch3?.nextCursor}`)
     // batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
