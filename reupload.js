@@ -29,6 +29,7 @@ do {
     logger.warn(`Fetching batch with offset ${count}`);
     let batch, batch2, batch3;
     
+    logger.info(`Old batch cursor: ${batch3?.nextCursor}`)
     // batch = await getBatch(nextCursor, DB_BATCH_SIZE);    
     batch = await getBatch(batch3?.nextCursor, DB_BATCH_SIZE);    
     logger.warn(`Batch1 Cursor: ${batch?.nextCursor}, Batch size: ${batch?.resources.length}`);
@@ -65,7 +66,7 @@ do {
     await Promise.all(processes);
 
     count += batch.resources.length + batch2.resources.length + batch3.resources.length;
-    logger.info("Sleeping for 15 seconds");
+    logger.info(`Total processed: ${count}. Sleeping for 15 seconds`);
     await sleep(15 * 1000); // 15 seconds
 } while (!breakNextLoop);
 

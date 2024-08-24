@@ -92,9 +92,11 @@ export const processReuploadItem = async (item) => {
     try {
         const res = await axios.head(checkUrl);
         if (res.status !== 200) {
+            logger.error(`File not found ${public_id}`);
             throw new Error("File not found");
         }
 
+        logger.info(`File already uploaded with public id ${public_id}`);
         data = { url: checkUrl };
     } catch (error) {
         logger.error(`File not found ${public_id}. Uploading again`);
@@ -109,12 +111,12 @@ export const processReuploadItem = async (item) => {
         
         try {
             data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
+            logger.info(`Uploaded: ${url}`);
         } catch (error) {
             logger.error(`Upload failed ${public_id}, ${error.status}, ${error.message}`);   
         }
     }
 
-    logger.info(`Uploaded: ${url}`);
     const bunnyUrl = data.url;
 
     const csvFilePath = path.resolve(__dirname, 'data_reuploaded.csv');
