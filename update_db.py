@@ -29,11 +29,11 @@ def create_query(data):
     """.format(
         " ".join(
             [
-                f"""WHEN "cloudinaryId" = '{row['public_id']}' THEN '{row['bunny_url']}'"""
+                f"""WHEN "cloudinaryId" = '{row['public_id'].replace("'", "''")}' THEN '{row['bunny_url'].replace("'", "''")}'"""
                 for _, row in data.iterrows()
             ]
         ),
-        ", ".join([f"'{row['public_id']}'" for _, row in data.iterrows()]),
+        ", ".join([f"'{row['public_id'].replace("'", "''")}'" for _, row in data.iterrows()]),
     )
 
     return query
