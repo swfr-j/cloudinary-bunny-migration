@@ -19,6 +19,22 @@ engine = create_engine(DB_URL)
 
 
 def create_query(data):
+    case_statement = []
+    where_statement = []
+
+    for _, row in data.iterrows():
+        case_statement.append(
+            "WHEN \"cloudinaryId\" = '{}' THEN '{}'".format(
+                row["public_id"].replace("'", "''"),
+                row["bunny_url"].replace("'", "''"),
+            )
+        )
+
+        where_statement = [
+            "'{}'".format(row["public_id"].replace("'", "''"))
+            for _, row in data.iterrows()
+        ]
+
     query = """
     UPDATE files
     SET url = 
@@ -27,13 +43,7 @@ def create_query(data):
         END
     WHERE "cloudinaryId" IN ({});
     """.format(
-        " ".join(
-            [
-                f"""WHEN "cloudinaryId" = '{row['public_id'].replace("'", "''")}' THEN '{row['bunny_url'].replace("'", "''")}'"""
-                for _, row in data.iterrows()
-            ]
-        ),
-        ", ".join([f"'{row['public_id'].replace("'", "''")}'" for _, row in data.iterrows()]),
+        " ".join(case_statement), ", ".join(where_statement)
     )
 
     return query
@@ -61,14 +71,19 @@ def main():
     # Create a transaction
     with engine.begin() as conn:
         # Read file in chunks of 50 lines
-        for chunk in read_file_in_chunks(FULLPATH, chunk_size=50):
+        for chunk in read_file_in_chunks(FULLPATH):
             query = create_query(chunk)
             query = text(query)
             print("Executing query", query)
             # Execute the query
             conn.execute(query)
 
-        # rollback the transaction (for testing purposes)
+        # WARN: This is just for testing purposes
+        # query = text("SELECT * FROM files limit 10;")
+        # result = conn.execute(query)
+        # for row in result:
+        #     print(row)
+
         # conn.rollback()
 
     print("Done")
