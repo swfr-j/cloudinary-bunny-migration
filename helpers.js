@@ -157,6 +157,18 @@ export const processPgItem = async (item) => {
     const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
     const fileName = `${cloudinaryId}.${item.extension}`;
 
+    const bunnyTestUrl = `${process.env.BUNNYCDN_PUBLIC_DOMAIN}${bunnyPath}`;
+    // check if the file is already uploaded
+    try {
+        const res = await axios.head(bunnyTestUrl);
+        if (res.status === 200) {
+            logger.info(`File already uploaded with public id ${cloudinaryId}`);
+            return;
+        }
+    } catch (error) {
+        logger.error(`File not found ${cloudinaryId}`);
+    }
+
     let data;
     let file;
 

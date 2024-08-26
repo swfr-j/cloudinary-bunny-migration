@@ -2,7 +2,7 @@ import { sleep, processPgBatch, getPgBatch, getTotalPgRecords } from './helpers'
 import logger from './logger';
 
 logger.info("Starting the process (Postgres)");
-const DB_BATCH_SIZE=500; // limit
+const DB_BATCH_SIZE=1000; // limit
 let count = 0; // offset
 
 
