@@ -68,13 +68,17 @@ def main():
         print("File not found")
         sys.exit(1)
 
+    total = 0
+
     # Create a transaction
     with engine.begin() as conn:
-        # Read file in chunks of 50 lines
+        # Read file in chunks of 500 lines
         for chunk in read_file_in_chunks(FULLPATH):
             query = create_query(chunk)
             query = text(query)
+            total += 500
             print("Executing query", query)
+            print("Total rows updated", total)
             # Execute the query
             conn.execute(query)
 
