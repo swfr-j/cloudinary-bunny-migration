@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import pathlib
 import sys
@@ -7,8 +8,10 @@ from sqlalchemy import create_engine, text
 
 load_dotenv()
 
-FILENAME = "check_success.csv"
-FULLPATH = os.path.join(pathlib.Path(__file__).parent.absolute(), FILENAME)
+# FILENAME = "check_success.csv"
+# FULLPATH = os.path.join(pathlib.Path(__file__).parent.absolute(), FILENAME)
+
+FULLPATH = None
 
 DB_URL = os.getenv("PY_POSTGRES_URL")
 
@@ -49,6 +52,8 @@ def read_file_in_chunks(file_path, chunk_size=500):
 
 
 def main():
+    FULLPATH = sys.argv[1]
+
     if not os.path.exists(FULLPATH):
         print("File not found")
         sys.exit(1)
