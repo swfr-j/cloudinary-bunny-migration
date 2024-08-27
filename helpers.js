@@ -157,35 +157,41 @@ export const processPgItem = async (item) => {
     const bunnyPath = url.replace('https://res.cloudinary.com/', '/cldn/');
     const fileName = `${cloudinaryId}.${item.extension}`;
 
-    const bunnyTestUrl = `${process.env.BUNNYCDN_PUBLIC_DOMAIN}${bunnyPath}`;
+    const checkUrl = `${process.env.BUNNYCDN_PUBLIC_DOMAIN}${bunnyPath}`;
     // check if the file is already uploaded
-    try {
-        const res = await axios.head(bunnyTestUrl);
-        if (res.status === 200) {
-            logger.info(`File already uploaded with public id ${cloudinaryId}`);
-            return;
-        }
-    } catch (error) {
-        logger.error(`File not found ${cloudinaryId}`);
-    }
 
     let data;
     let file;
 
     try {
-        file = await axios.get(url, {
-            responseType: 'arraybuffer',
-        });
+        const res = await axios.head(checkUrl);
+        if (res.status !== 200) {
+            logger.error(`File not found ${public_id}`);
+            throw new Error("File not found");
+        }
+
+        logger.info(`File already uploaded with public id ${public_id}`);
+        data = { url: checkUrl };
     } catch (error) {
-        logger.error(`Download Failed ${cloudinaryId}, ${error.status}, ${error.message}`);
-        return;
+        logger.error(`File not found ${cloudinaryId}`);
+        try {
+            file = await axios.get(url, {
+                responseType: 'arraybuffer',
+            });
+        } catch (error) {
+            logger.error(`Download Failed ${cloudinaryId}, ${error.status}, ${error.message}`);
+            return;
+        }
+    
+        try {
+            data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
+        } catch (error) {
+            logger.error(`Upload failed ${cloudinaryId}, ${error.status}, ${error.message}`);
+        }
     }
 
-    try {
-        data = await bcdn.uploadFile(file.data, fileName, bunnyPath);
-    } catch (error) {
-        logger.error(`Upload failed ${cloudinaryId}, ${error.status}, ${error.message}`);
-    }
+
+   
 
     const csvFilePath = path.resolve(__dirname, 'data_pg.csv');
     try {
