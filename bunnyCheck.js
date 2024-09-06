@@ -7,8 +7,6 @@ import PQueue from "p-queue";
 
 const queue = new PQueue({ concurrency: 10, timeout: 1000, throwOnTimeout: true });
 
-const successFilePath = path.resolve(__dirname, "check_bcdn_success.csv");
-const errorsFilePath = path.resolve(__dirname, "check_bcdn_errors.csv");
 const processBatch = async (public_id, bunny_url) => {
   if (!bunny_url) {
     return;
@@ -17,17 +15,11 @@ const processBatch = async (public_id, bunny_url) => {
     const res = await axios.head(bunny_url);
 
     if (res.status !== 200) {
-      throw new Error(`Url not working: ${bunny_url}`);
+      throw new Error(`Url not working: ${bunny_url} with public id ${public_id}`);
     }
     logger.info(`Url working: ${bunny_url}`);
-    await csvWriter(successFilePath).writeRecords([
-      { public_id, bunny_url },
-    ]);
   } catch (error) {
-    logger.error(`Error checking URL: ${bunny_url}, ${error.message}`);
-    await csvWriter(errorsFilePath).writeRecords([
-      { public_id, bunny_url, error: error.message },
-    ]);
+    logger.error(`Error checking URL: ${bunny_url} with public id ${public_id}, ${error.message}`);
   }
 };
 
