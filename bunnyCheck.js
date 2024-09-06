@@ -1,7 +1,5 @@
 import axios from "axios";
 import { getBCDNPGRecords, getBCDNBatch, sleep } from "./helpers";
-import { csvWriter } from "./csvHelpers";
-import path from "path";
 import logger from "./logger";
 import PQueue from "p-queue";
 
@@ -40,7 +38,7 @@ const main = async () => {
     logger.info(`Processing batch with size ${batch.length}`);
     
     for (const item of batch) {
-      queue.add(() => processBatch(item.public_id, item.bunny_url));
+      queue.add(() => processBatch(item.id, item.url));
     }
     await queue.onIdle();
     await sleep(5000);

@@ -257,7 +257,7 @@ export const getBCDNPGRecords = async () => {
 export const getBCDNBatch = async (offset, DB_BATCH_SIZE) => {
     try {
         const res = await db.query(`
-            SELECT "cloudinaryId", url FROM files
+            SELECT "cloudinaryId" as id, url FROM files
             WHERE url LIKE 'https://cdnb.nolt.in/%'
                 AND "dateDeleted" IS NULL
             LIMIT ${DB_BATCH_SIZE}
