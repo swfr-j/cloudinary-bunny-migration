@@ -240,3 +240,31 @@ export const getTotalPgRecords = async () => {
         logger.error("Failed to fetch resources", error.status, error.message);
     }
 }
+
+export const getBCDNPGRecords = async () => {
+    try {
+        const res = await db.query(`
+            SELECT count(*) FROM files
+            WHERE url LIKE 'https://cdnb.nolt.in/%'
+                AND "dateDeleted" IS NULL;
+        `, { type: db.QueryTypes.SELECT });
+        return res;
+    } catch (error) {
+        logger.error("Failed to fetch resources", error.status, error.message);
+    }
+}
+
+export const getBCDNBatch = async (offset, DB_BATCH_SIZE) => {
+    try {
+        const res = await db.query(`
+            SELECT "cloudinaryId", url FROM files
+            WHERE url LIKE 'https://cdnb.nolt.in/%'
+                AND "dateDeleted" IS NULL
+            LIMIT ${DB_BATCH_SIZE}
+            OFFSET ${offset};
+        `, { type: db.QueryTypes.SELECT });
+        return res;
+    } catch (error) {
+        logger.error("Failed to fetch resources", error.status, error.message);
+    }
+}
