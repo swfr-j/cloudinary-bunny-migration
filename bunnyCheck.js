@@ -1,8 +1,14 @@
 import axios from "axios";
 import { getBCDNPGRecords, getBCDNBatch, sleep } from "./helpers";
 import { csvWriter } from "./csvHelpers";
+import path from "path";
 import logger from "./logger";
+import PQueue from "p-queue";
 
+const queue = new PQueue({ concurrency: 10, timeout: 1000, throwOnTimeout: true });
+
+const successFilePath = path.resolve(__dirname, "check_bcdn_success.csv");
+const errorsFilePath = path.resolve(__dirname, "check_bcdn_errors.csv");
 const processBatch = async (public_id, bunny_url) => {
   if (!bunny_url) {
     return;
@@ -14,12 +20,12 @@ const processBatch = async (public_id, bunny_url) => {
       throw new Error(`Url not working: ${bunny_url}`);
     }
     logger.info(`Url working: ${bunny_url}`);
-    await csvWriter("check_bcdn_success.csv").writeRecords([
+    await csvWriter(successFilePath).writeRecords([
       { public_id, bunny_url },
     ]);
   } catch (error) {
     logger.error(`Error checking URL: ${bunny_url}, ${error.message}`);
-    await csvWriter("check_bcdn_errors.csv").writeRecords([
+    await csvWriter(errorsFilePath).writeRecords([
       { public_id, bunny_url, error: error.message },
     ]);
   }
@@ -40,13 +46,11 @@ const main = async () => {
     count += BATCH_SIZE;
 
     logger.info(`Processing batch with size ${batch.length}`);
-    const promises = [];
+    
     for (const item of batch) {
-      promises.push(processBatch(item.public_id, item.bunny_url));
+      queue.add(() => processBatch(item.public_id, item.bunny_url));
     }
-
-    await Promise.all(promises);
-
+    await queue.onIdle();
     await sleep(5000);
   } while (count <= total);
 };
